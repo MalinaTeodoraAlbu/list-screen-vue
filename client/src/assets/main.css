@@ -28,12 +28,19 @@ body::-webkit-scrollbar-thumb {
 
 
 .container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 90%;
-  max-width: 500px;
+  max-width: 600px;
   margin:100px auto;
   border-radius: 20px;
   box-shadow: 2px 4px 6px rgba(28, 6, 49, 0.1);
-  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid white;
+  backdrop-filter: blur(10px);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  min-height: 500px;
 }
 .error {
   color: #ff3f80;
@@ -42,8 +49,8 @@ body::-webkit-scrollbar-thumb {
 
 button {
   text-decoration: none;
-  background: #61677A;
-  color: white;
+  background: #ffffff;
+  color: black;
   font-weight: bold;
   border: 0;
   border-radius: 20px;
@@ -74,7 +81,7 @@ button {
   position: relative;
   border-radius: 10px;
   box-shadow: rgba(0, 0, 0, 0.5) 0px 3px 8px;
-  min-height: 600px;
+  min-height: 800px;
 }
 
 .material-symbols-outlined{
@@ -214,13 +221,13 @@ footer{
 }
 
 .table_movies {
-  background-color: rgba(106, 102, 115, 0.8);
-  min-width: 1000px;
+  background-color: rgba(106, 102, 115, 0.5);
+  
   margin-top: 20px;
   color: rgb(233, 230, 230);
-  width: 100%;
+  width: 90%;
   max-width: 1200px;
-
+  margin-bottom: 10a0px;
 }
 
 
@@ -256,12 +263,14 @@ th {
   width: 7%
 }
 @media only screen and (max-width: 600px) {
-  .table_movies {
-    min-width: 100%;
-  }
+
 
   .th_title, .th_genre, .th_ranking {
     width: 100%;
+  }
+
+  .movie-item{
+    margin-left: 10px;
   }
 }
 
@@ -293,3 +302,5 @@ th {
   box-shadow: rgba(0, 0, 0, 0.5) 0px 3px 8px;
   min-height: 600px;
 }
+
+

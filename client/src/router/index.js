@@ -3,27 +3,22 @@ import Welcome from '../views/Welcome.vue'
 import Movies from '../views/Movies.vue'
 import MyList from '../views/MyList.vue'
 import TopMovies from '../views/TopMovies.vue'
-import { projectAuth } from '@/firebase/config'
-import NewMovies from '../views/NewMovies.vue'
+import ViewDetails from '../views/ViewDetails.vue'
 import ManageMovies from '../views/admin/ManageMovies.vue'
 import AddMovie from '../components/admin/AddMovie.vue'
 import EditMovie from '../components/admin/EditMovie.vue'
 import useToken from '../composables/useToken'
 import getUser from '@/composables/getUser';
+import verifyAndCheckAdmin from '@/composables/verifyAndCheckAdmin'
 
 
 const requireAuth = async (to, from, next) => {
-  console.log('Before navigation guard checks');
-
   const { token, getToken } = useToken();
   const { user } = getUser();
 
   try {
     await getToken(token);
-    console.log('Token retrieved:', token.value);
     const isAdmin = await verifyAndCheckAdmin(token.value);
-    console.log('Is Admin:', isAdmin);
-
     if (isAdmin) {
       if (to.name === 'ManageMovies' || to.name === 'AddMovie' || to.name === 'EditMovie') {
         next();
@@ -31,47 +26,21 @@ const requireAuth = async (to, from, next) => {
         next({ name: 'Movies' });
       }
     } else {
-      if (to.name === 'Movies' || to.name === 'MyList') {
-        next();
+      if (token.value) {
+        if (to.name === 'MyList') {
+          next();
+        } else {
+          next({ name: 'Movies' });
+        }
       } else {
-        next({ name: 'Movies' });
+        next({ name: 'Welcome' });
       }
     }
   } catch (error) {
     console.error('Error checking custom claim:', error);
     next({ name: 'Error' });
   }
-
-  console.log('After navigation guard checks');
 };
-
-
-const verifyAndCheckAdmin = async (idToken) => {
-  try {
-    const response = await fetch('http://localhost:4000/verify-admin', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${idToken}`, 
-      },
-    });
-
-    console.log(response);
-
-    if (response.ok) {
-      const result = await response.json();
-      return result.isAdmin;
-    } else {
-      console.error('Error verifying admin status:', response.statusText);
-      return false;
-    }
-  } catch (error) {
-    console.error('Error verifying admin status:', error);
-    return false;
-  }
-};
-
-
 
 
 const routes = [
@@ -98,9 +67,10 @@ const routes = [
   }
   ,
   {
-    path: '/new-movies',
-    name: 'NewMovies',
-    component: NewMovies
+    path: '/view-movie/:id',
+    name: 'ViewMovie',
+    component: ViewDetails,
+    props: true
   }
   ,
   {

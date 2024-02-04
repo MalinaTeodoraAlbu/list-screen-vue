@@ -3,10 +3,10 @@
     <div class="h1_add_movie">
       <h1>Edit movie</h1>
     </div>
-    <div class="add-movie-form">
+    <div class="edit-movie-form">
       <div class="image_div">
         <img v-if="movieData && movieData.ImageURL" :src="movieData.ImageURL" alt="Movie Image" class="preview-image">
-        <p v-else>No Image Available</p>
+        
       </div>
         <div class="forms_group">
           <div class="form-group">
@@ -35,29 +35,38 @@
         <option v-for="genre in genres" :key="genre" :value="genre">{{ genre }}</option>
       </select>
       <span  @click="addGenre" class="material-symbols-outlined">library_add</span>
-      <label>Genres: </label>
+      <label v-if="movieData.Genre !=''">Genres: </label>
       <div v-for="genre in movieData.Genre" :key="genre">
-        <p>{{ genre }}</p>
+        <div class="genre_">
+          <p>{{ genre }}</p>
+          <p @click="deleteGenre(genre)">X</p>
+        </div>
       </div>
     </div>
     <div class="form-group">
       <label for="cast">Cast</label>
       <input type="text" id="cast" v-model="addedActor">
       <span  @click="addActor" class="material-symbols-outlined">library_add</span>
-      <label>Cast: </label>
+      <label v-if="movieData.Cast !=''">Cast: </label>
       <div v-for="actor in movieData.Cast" :key="actor">
-        <p>{{ actor }}</p>
+        <div class="genre_">
+          <p>{{ actor }}</p>
+          <p @click="deleteActor(actor)">X</p>
+        </div>
       </div>
     </div>
     <div class="form-group">
       <label for="releaseDate">Release Date</label>
       <input type="date" id="releaseDate" v-model="movieData.ReleaseDate">
     </div>
+    <div class="error_container" v-if="errorMovie!=''">
+      <span class="error">{{ errorMovie }}</span>
+    </div>
         </div>
     </div>
     <div class="form-group_btn">
         <button @click="editMovie">Edit Movie</button>
-        <button class="back_btn">Cancel</button>
+        <button class="back_btn" @click="cancel">Cancel</button>
       </div>
   </div>
 </template>
@@ -65,7 +74,9 @@
 <script>
 import { ref, onMounted } from 'vue';
 import useStorage from '../../composables/useStorage'; 
-import { projectStorage } from '../../firebase/config';
+import { useRouter } from 'vue-router';
+import useToken from '@/composables/useToken';
+import getUser from '@/composables/getUser';
 
 export default {
   props: ['id'],
@@ -77,7 +88,11 @@ export default {
     const addedActor = ref('');
     const movieData = ref({});
     const loading = ref(true);
+    const errorMovie = ref('')
+    const { token, getToken } = useToken();
+    const router = useRouter();
 
+    getToken();
     
     const fetchMovieData = async () => {
       try {
@@ -112,6 +127,17 @@ export default {
     }
   };
 
+  const deleteGenre = (genre) => {
+    if(genre){
+      movieData.value.Genre.pop(genre);
+    }
+  }
+  const deleteActor = (actor) => {
+    if(actor){
+      movieData.value.Cast.pop(actor);
+    }
+  }
+
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -120,18 +146,50 @@ export default {
     }
   };
 
-
-
     onMounted(() => {
       fetchMovieData();
     });
 
+    const validateTitle = () => {
+      const trimmedTitle = movieData.value.Title.trim();
+
+      if (trimmedTitle === '') {
+        errorMovie.value = 'Please enter a title.';
+        return false;
+      }
+
+      const firstLetter = trimmedTitle.charAt(0).toUpperCase();
+      movieData.value.Title = firstLetter + trimmedTitle.slice(1);
+
+      return true;
+    };
+
+    const validateGenre = () => {
+      if (movieData.value.Genre.length === 0) {
+        errorMovie.value = 'Please select at least one genre.';
+        return false;
+      }
+      return true;
+    };
+
+    const validateCast = () => {
+      if (movieData.value.Cast.length === 0) {
+        errorMovie.value = 'Please select at least one actor.';
+        return false;
+      }
+      return true;
+    };
+
     const editMovie = async () => {
+      if (!validateTitle() || !validateGenre() || !validateCast()) {
+    return;
+    }
     try {
         const response = await fetch(`http://localhost:4000/movies/${props.id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${token.value}`,
         },
         body: JSON.stringify(movieData.value),
         });
@@ -139,14 +197,17 @@ export default {
         if (!response.ok) {
         throw new Error(`Failed to update movie: ${response.statusText}`);
         }
-
         const updatedData = await response.json();
         console.log('Movie updated successfully:', updatedData);
+        router.push({ name: 'ManageMovies'});
     } catch (error) {
         console.error('Error updating movie:', error);
     }
     };
 
+    const cancel = async() => {
+      router.push({ name: 'ManageMovies'});
+    }
 
     return {
       movieData,
@@ -157,7 +218,11 @@ export default {
       addActor,
       selectedGenre,
       addedActor,
-      handleImageUpload
+      handleImageUpload,
+      cancel,
+      deleteGenre,
+      errorMovie,
+      deleteActor
     };
   },
 };
@@ -166,6 +231,12 @@ export default {
 
 <style scoped>
 
+.error{
+  font-size: 1rem;
+  color: rgb(178, 8, 8);
+  font-weight: bold;
+
+}
 .back_btn{
   justify-items: flex-end;
   float: right;
@@ -183,17 +254,24 @@ width: 50%;
   width: 100%;
   margin: 20px;
 }
+
+.error_container{
+  border: 1px solid rgba(252, 251, 251, 0.8);
+  background-color: rgba(252, 251, 251, 0.5);
+  border-radius: 20px;
+  padding: 20px;
+}
 h1 {
   text-align: center;
   margin-bottom: 20px;
   color: white;
 }
 
-.add-movie-form {
-  background-color: rgba(106, 102, 115, 0.8);
+.edit-movie-form {
+  background-color: rgba(106, 102, 115, 0.5);
   color: white;
   padding: 20px;
-  width: 60%;
+  width: 80%;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -206,7 +284,8 @@ h1 {
 .image_div{
   width: 40%;
   margin: 40px;
-  height: 400px;
+  height: auto;
+  max-height: 600px;
   border: 3px solid white;
   border-radius: 20px;
   justify-content: center;
@@ -245,6 +324,14 @@ button {
   margin-bottom: 50px;
 }
 
+.genre_{
+  display: flex;
+  border:1px solid rgba(214, 207, 230, 0.5);
+  border-radius: 20px;
+  padding: 10px;
+  margin-top: 10px;
+  justify-content: space-between;
+}
 .preview-image {
   align-items: center;
   max-width: 100%;
@@ -256,8 +343,11 @@ button {
   clear: both;
 }
 
+textarea{
+  min-height: 200px;
+}
 @media (max-width: 808px) {
-  .add-movie-form {
+  .edit-movie-form{
   display: block;
   width: 100%;
   }

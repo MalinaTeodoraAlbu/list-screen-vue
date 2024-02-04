@@ -1,17 +1,19 @@
 <template>
-  <div>
-    <div>
-        <NavbarAdmin></NavbarAdmin>
-    </div>
-    <div>
         <div class="container_movies_admin" >
             <div class="actions_movie">
+              <div class="search_bar">
+            <input type="text" v-model="search" placeholder="Search for a movie...">
+            <span class="material-symbols-outlined">search</span>
+          </div> 
             <p>Add a new movie</p>
             <router-link to="/add-movie"> <span class="material-symbols-outlined">add</span></router-link>
+            <p>Add moview with faker</p>
+            <span class="material-symbols-outlined" @click="addFakerMoviesfunc">add</span>
             </div>
-            <table class="table_movies">
+              <table class="table_movies">
                 <thead>
                     <tr>
+                    <th class="th_id" > #</th>
                     <th class="th_title"> Title</th>
                     <th class="th_genre">Genre</th>
                     <th class="th_ranking">Ranking</th>
@@ -19,7 +21,8 @@
                     </tr>
                 </thead>
                 <tbody >
-                    <tr v-for="movie in paginatedMovies" :key="movie.id">
+                    <tr v-for="(movie, movieIndex) in paginatedMovies" :key="movie.id">
+                      <td> {{ calculateIndex(movieIndex) }} </td>
                     <td>{{ movie.Title }}</td>
                     <td > {{ movie.Genre[0] }},  {{ movie.Genre[1] }}</td>
                     
@@ -32,33 +35,38 @@
                 </tbody>
             </table>
             <div class="pagination">
-            <span   @click="previousPage" :disabled="currentPage === 1" class="material-symbols-outlined">
-            arrow_back_ios_new
-            </span>
+            <span   @click="previousPage" :disabled="currentPage === 1" class="material-symbols-outlined">arrow_back_ios_new</span>
             <span >{{ currentPage }} / {{ totalPages }}</span>
-            <span  @click="nextPage" :disabled="currentPage === totalPages" class="material-symbols-outlined">
-          arrow_forward_ios
-          </span>
+            <span  @click="nextPage" :disabled="currentPage === totalPages" class="material-symbols-outlined">arrow_forward_ios</span>
           </div>
         </div>
-    </div>
-    <router-view></router-view>
-  </div>
-  
 </template>
 
 <script>
 import { useRouter } from 'vue-router';
-import NavbarAdmin from '../../components/admin/NavbarAdmin.vue';
+import Navbar from '../../components/Navbar.vue';
 import { movies, fetchMovies } from '../../composables/getMovies';
 import { computed, onMounted, ref } from 'vue';
+import { addFakerMovies } from '../../composables/addFakerMovies'
+import useToken from '@/composables/useToken';
+import getUser from '@/composables/getUser';
 
 export default {
-  components: { NavbarAdmin },
+  components: { Navbar },
   setup() {
     const router = useRouter();
     const currentPage = ref(1);
     const perPage = 10;
+    const search = ref('');
+    const { token, getToken } = useToken();
+    const {user} = getUser();
+    getToken()
+
+    const addFakerMoviesfunc = async () => {
+      addFakerMovies();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await fetchMovies();
+    }
 
     const previousPage = () => {
       if (currentPage.value > 1) {
@@ -79,7 +87,7 @@ export default {
     const paginatedMovies = computed(() => {
       const startIndex = (currentPage.value - 1) * perPage;
       const endIndex = startIndex + perPage;
-      return movies.value.slice(startIndex, endIndex);
+      return matchingMovies.value.slice(startIndex, endIndex);
     });
 
     onMounted(async () => {
@@ -91,6 +99,10 @@ export default {
         console.log(movie);
         const response = await fetch('http://localhost:4000/movies/' + movie.id, {
           method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+              Authorization: `Bearer ${token.value}`,
+          },
         });
         if (response.ok) {
           await fetchMovies();
@@ -110,17 +122,70 @@ export default {
       }
     };
 
-  
+    const calculateIndex = (movieIndex) => {
+      return (currentPage.value - 1) * perPage + movieIndex + 1;
+    };
+
+    const matchingMovies = computed(() => {
+      if (!movies.value || !Array.isArray(movies.value)) {
+        return [];
+      }
+
+      let filteredMovies = movies.value.filter((movie) => {
+        const titleMatch = movie.Title.toLowerCase().includes(search.value.toLowerCase());
+        return titleMatch;
+      });
+      return filteredMovies;
+    });
+
     return {
       movies,
       deleteMovie,
       currentPage,
       totalPages,
       paginatedMovies,
+      matchingMovies,
       previousPage,
       nextPage,
-      editMovie
+      editMovie,
+      calculateIndex,
+      addFakerMoviesfunc,
+      search
     };
   },
 };
 </script>
+
+
+<style scoped>
+
+  .th_id{
+    margin: auto;
+    width: 2%
+  }
+  .pagination{
+    position: absolute;
+    margin-bottom: 20px;
+    bottom: 10px;
+    right: 0;
+    margin: auto;
+
+  }
+  
+  .table_movie_conatiner{
+    width: 100%;
+    margin: auto;
+    display: flex;
+    justify-content: center;
+    min-height: 650px;
+  }
+  .container_movies_admin{
+    min-height: 800px;
+  }
+
+  .actions_movie p{
+    margin-left: 40px;
+  }
+
+
+</style>

@@ -24,11 +24,11 @@ setup(props, context){
         await signup(email.value, password.value, username.value )
         if(!error.value){
           context.emit('signup')
-
         } 
     }
+
     return{username, email, password, handleSubmit, error}
-}
+  }
 }
 </script>
 
