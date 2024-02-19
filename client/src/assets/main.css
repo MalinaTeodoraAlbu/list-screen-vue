@@ -16,6 +16,23 @@ body::before {
   z-index: -1; 
 }
 
+
+
+h3 { color: #222; font-family: 'Open Sans', sans-serif; font-size: 15px; font-weight: 400; line-height: 24px; margin: 0 0 14px; }
+
+h1 { color: #f5f5f4; font-family: 'Trocchi', serif; font-size: 45px; font-weight: normal; line-height: 48px; margin: 0; }
+
+
+h2 { color: #ffffff; font-family: 'Source Sans Pro', sans-serif; font-size: 28px; font-weight: 400; line-height: 32px; margin: 0 0 24px; }
+
+
+.subheader { font-size: 26px; font-weight: 300; color: #ffcc66; margin: 0 0 24px; }
+
+
+p { color: #b5a3a3; font-family: 'Source Sans Pro', sans-serif; font-size: 18px; line-height: 32px; }
+
+
+
 body::-webkit-scrollbar {
   display: none;
 

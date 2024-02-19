@@ -73,10 +73,10 @@
 <script>
 import { ref } from 'vue';
 import useStorage from '../../composables/useStorage'; 
-import { projectStorage } from '../../firebase/config';
 import { useRouter } from 'vue-router';
 import useToken from '@/composables/useToken';
 import getUser from '@/composables/getUser';
+import {validateMovie} from '../../composables/validateMovie'
 
 export default {
   setup() {
@@ -105,7 +105,6 @@ export default {
     const addGenre = () => {
     if (selectedGenre.value && !movieData.value.Genre.includes(selectedGenre.value)) {
       movieData.value.Genre.push(selectedGenre.value);
-      movieData.value.Genre = [...movieData.value.Genre];
       selectedGenre.value = ''; 
       }
     };
@@ -113,7 +112,6 @@ export default {
     const addActor = () => {
     if (addedActor.value && !movieData.value.Cast.includes(addedActor.value)) {
       movieData.value.Cast.push(addedActor.value);
-      movieData.value.Cast = [...movieData.value.Cast];
       addedActor.value = ''; 
     }
   };
@@ -138,38 +136,8 @@ export default {
     }
   };
 
-  const validateTitle = () => {
-      const trimmedTitle = movieData.value.Title.trim();
-
-      if (trimmedTitle === '') {
-        errorMovie.value = 'Please enter a title.';
-        return false;
-      }
-
-      const firstLetter = trimmedTitle.charAt(0).toUpperCase();
-      movieData.value.Title = firstLetter + trimmedTitle.slice(1);
-
-      return true;
-    };
-
-    const validateGenre = () => {
-      if (movieData.value.Genre.length === 0) {
-        errorMovie.value = 'Please select at least one genre.';
-        return false;
-      }
-      return true;
-    };
-
-    const validateCast = () => {
-      if (movieData.value.Cast.length === 0) {
-        errorMovie.value = 'Please select at least one actor.';
-        return false;
-      }
-      return true;
-    };
-
     const addMovie = async () => {
-      if (!validateTitle() || !validateGenre() || !validateCast()) {
+      if (!validateMovie(movieData,  errorMovie)) {
       return;
       }
       try {

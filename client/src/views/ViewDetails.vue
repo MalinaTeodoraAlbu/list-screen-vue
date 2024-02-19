@@ -1,41 +1,50 @@
 <template>
-   <div class="container_movie">
-  <div class="movies-container" v-if="movie">
+   <div v-if="movie" class="container_movie">
+  <div class="movies-container">
     <div class="left_details">
       <img v-if="movie.ImageURL" :src="movie.ImageURL" alt="Movie Poster" class="movie-poster" />
-      <img v-else src="https://st4.depositphotos.com/14953852/24787/v/1600/depositphotos_247872612-stock-illustration-no-image-available-icon-vector.jpg" alt="Movie Poster" class="movie-poster" />
     </div>
       <div class="right_details" >
-        <h2 id="movie_title">{{ movie.Title }}</h2>
+       <div class="movie-title">
+        <h2 id="movie_title">{{ movie.Title}}</h2>
+       </div>
         <hr>
         <div class="movie-releaseDate">
-          <p>Release date: </p>
-          <h3>{{ movie.ReleaseDate }}</h3>
+          <p class="attribute">Release date: </p>
+          <span>{{ movie.ReleaseDate }}</span>
+        </div>
+        <div class="movie-releaseDate">
+          <p class="attribute" >Duration: </p>
+          <span>{{ movie.Duration }}</span>
         </div>
         <div class="movie-rating">
-          <p>Rating:</p>
+          <p class="attribute">Rating:</p>
           <div class="star-rating">
             <span v-for="index in 10" :key="index" class="star" :class="{ 'filled': index <= Math.floor(movie.Rating), 'half-filled': index > Math.floor(movie.Rating) && index - 0.5 <= movie.Rating }">&#9733;</span>
             <span>{{ movie.Rating }}</span>
           </div>
         </div>
         <div class="movie-tags">
-          <p>Genre:</p>
+          <p class="attribute" >Genre:</p>
           <div class="tags">
             <span v-for="genre in movie.Genre" :key="genre" class="tag">{{ genre }}</span>
           </div>
         </div>
         <div class="movie-cast">
-          <p>Cast:</p>
-          <div v-for="actor in movie.Cast" :key="actor" class="tag">
-            <span >{{ actor }}</span>
+          <p class="attribute" >Cast:</p>
+          <div class="tag_cast">
+            <span v-for="actor in movie.Cast" :key="actor" >{{ actor }}</span>
           </div>
         </div>
         <hr>
         <div class="description">
-           <h3> {{ movie.Description }}</h3>
-        </div>
-        
+          <p id="show_more" @click="toggleDescription">
+            {{ showFullDescription ? "Show Less" : "Show More" }}
+          </p>
+          <p v-if="showFullDescription">{{ movie.Description }}</p>
+          <p v-else>{{ truncatedDescription }}</p>
+          
+      </div>
         <div class="movie-buttons" v-if="!isAdmin && isUser">
         <button @click="toggleWatched" :class="{ 'added': watchedAdded }">Watched</button>
         <button @click="togglewatchLater" :class="{ 'added': watchLaterAdded }">Watch Later</button>
@@ -51,7 +60,7 @@
 
 <script>
 import useToken from '@/composables/useToken';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import verifyAndCheckAdmin from '@/composables/verifyAndCheckAdmin'
 import getUser from '@/composables/getUser';
 
@@ -59,12 +68,25 @@ export default {
   props: ['id'],
   setup(props) {
     const movie = ref({});
+    const showFullDescription = ref(false);
     const { token, getToken } = useToken();
     const {user} = getUser()
     getToken();
 
     const isUser = ref(false)
     const isAdmin = ref(false)
+
+    const toggleDescription = () => {
+      showFullDescription.value = !showFullDescription.value;
+    };
+
+    const truncatedDescription = computed(() => {
+      const maxLength = 200;
+      const movieDescription = movie.value.Description || '';
+      return movieDescription.length > maxLength
+        ? movieDescription.substring(0, maxLength) + "..."
+        : movieDescription;
+    });
 
     const checkAdminStatus = async () => {
       try {
@@ -203,7 +225,8 @@ export default {
       methods.checkIfMovieInLists();
     });
 
-    return { isUser, isAdmin, movie, watchedAdded, watchLaterAdded, ...methods };
+    return { isUser, isAdmin, movie, watchedAdded, watchLaterAdded, showFullDescription,
+      toggleDescription, truncatedDescription, ...methods };
   },
 };
 </script>
@@ -248,10 +271,14 @@ max-height: 700px;
   padding:10px ;
 }
 
-.movie-rating, .movie-releaseDate{
+.movie-rating, .movie-title, .movie-releaseDate{
   display: inline;
   min-width: 300px;
 }
+.movie-title{
+  display: flex;
+}
+
 
 #movie_title {
   font-family: oswald;
@@ -324,21 +351,19 @@ p{
 
 .tags span{
   margin-left: 10px;
+  
 }
 
 .movie-cast {
-  display: block;
-  align-items: center;
-  margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  grid-template-rows: 3fr 1fr;
 }
 
-
-
-.movie-cast span{
-  margin: 50px;
+.movie-cast p{
+  margin-right: 0;
 }
 .movie-cast span {
-  color: black;
   padding: 15px;
   color: white;
 }
@@ -351,14 +376,19 @@ p{
   
 }
 
+.description{
+  position: relative;
+}
+
+
 .description h3 {
   margin-top: 20px;
   font-size: 15px;
-  font-family: 'Untitled Sans';
   font-weight: 400;
   color: white;
   height: 150px;
 }
+
 
 .added {
 background-color: #2ea25f !important; 
@@ -388,6 +418,10 @@ color: #fff !important;
   }
 
   
+}
+
+.attribute{
+  min-width: 130px;
 }
 
 @media (min-width: 1130px) and (max-width: 1300px) {
@@ -506,5 +540,16 @@ color: #fff !important;
   button{
     padding: 8px;
   }
+}
+
+.tag_cast {
+display: grid;
+grid-template-columns: auto;
+gap: 0;
+grid-template-rows: 40px 40px 40px;
+margin-bottom: 20px;
+}
+.tag_cast span{
+padding-top: 25px;
 }
 </style>

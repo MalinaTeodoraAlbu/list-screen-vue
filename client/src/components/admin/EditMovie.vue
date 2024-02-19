@@ -76,7 +76,7 @@ import { ref, onMounted } from 'vue';
 import useStorage from '../../composables/useStorage'; 
 import { useRouter } from 'vue-router';
 import useToken from '@/composables/useToken';
-import getUser from '@/composables/getUser';
+import {validateMovie} from '../../composables/validateMovie'
 
 export default {
   props: ['id'],
@@ -150,40 +150,11 @@ export default {
       fetchMovieData();
     });
 
-    const validateTitle = () => {
-      const trimmedTitle = movieData.value.Title.trim();
-
-      if (trimmedTitle === '') {
-        errorMovie.value = 'Please enter a title.';
-        return false;
-      }
-
-      const firstLetter = trimmedTitle.charAt(0).toUpperCase();
-      movieData.value.Title = firstLetter + trimmedTitle.slice(1);
-
-      return true;
-    };
-
-    const validateGenre = () => {
-      if (movieData.value.Genre.length === 0) {
-        errorMovie.value = 'Please select at least one genre.';
-        return false;
-      }
-      return true;
-    };
-
-    const validateCast = () => {
-      if (movieData.value.Cast.length === 0) {
-        errorMovie.value = 'Please select at least one actor.';
-        return false;
-      }
-      return true;
-    };
 
     const editMovie = async () => {
-      if (!validateTitle() || !validateGenre() || !validateCast()) {
-    return;
-    }
+      if (!validateMovie(movieData, errorMovie)) {
+        return;
+      }
     try {
         const response = await fetch(`http://localhost:4000/movies/${props.id}`, {
         method: 'PUT',

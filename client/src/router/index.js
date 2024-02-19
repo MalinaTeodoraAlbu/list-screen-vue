@@ -8,14 +8,12 @@ import ManageMovies from '../views/admin/ManageMovies.vue'
 import AddMovie from '../components/admin/AddMovie.vue'
 import EditMovie from '../components/admin/EditMovie.vue'
 import useToken from '../composables/useToken'
-import getUser from '@/composables/getUser';
 import verifyAndCheckAdmin from '@/composables/verifyAndCheckAdmin'
 
 
 const requireAuth = async (to, from, next) => {
   const { token, getToken } = useToken();
-  const { user } = getUser();
-
+  
   try {
     await getToken(token);
     const isAdmin = await verifyAndCheckAdmin(token.value);
@@ -33,7 +31,7 @@ const requireAuth = async (to, from, next) => {
           next({ name: 'Movies' });
         }
       } else {
-        next({ name: 'Welcome' });
+        next({ name: 'Movies' });
       }
     }
   } catch (error) {
@@ -45,12 +43,12 @@ const requireAuth = async (to, from, next) => {
 
 const routes = [
   {
-    path: '/',
+    path: '/welcome',
     name: 'Welcome',
-    component: Welcome
+    component: Welcome,
   },
   {
-    path: '/movies',
+    path: '/',
     name: 'Movies',
     component: Movies
   },

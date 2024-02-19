@@ -1,17 +1,17 @@
 <template>
      <nav class="nav">
       <div class="logo">
-        <img src="../assets/logo.png"/>
+        <router-link  :to="{ name: 'Movies' }"><img src="../assets/logo.png"/></router-link>
       </div>
       <div class="uil uil-bars navOpenBtn">
           <span class="material-icons">menu</span>
       </div>
       <ul class="nav-links">
         <div class="uil uil-times navCloseBtn"><span class="material-icons">close</span></div>
-        <li v-if="user && isAdmin"><router-link class="link" to="/manageMovies"><span >Manage Movies</span></router-link></li>
+        <li v-if="user && isAdmin"><router-link class="link" :to="{ name: 'ManageMovies' }"><span >Manage Movies</span></router-link></li>
         <li v-if="user && !isAdmin"><router-link class="link" :to="{ name: 'MyList' }"><span>My list</span></router-link></li>
-        <li><router-link class="link" to="/movies"><span >All Movies</span></router-link></li>
-        <li><router-link class="link" to="/top-movies"><span >Top Movies</span></router-link></li>
+        <li><router-link class="link" :to="{ name: 'Movies' }"><span >All Movies</span></router-link></li>
+        <li><router-link class="link" :to="{ name: 'TopMovies' }"><span >Top Movies</span></router-link></li>
         <li>
           <div v-if="user" class="user_details">
             <p>{{ user.displayName }}</p>
@@ -20,20 +20,19 @@
         <li> 
           <div  v-if="user" class="logout"><span @click="handleLogout" class="material-icons">logout</span></div>
           <div v-else class="logout">
-            <router-link  to="/">  <span class="material-icons">login</span></router-link>
+            <router-link  :to="{ name: 'Welcome' }"><span class="material-icons">login</span></router-link>
           </div>
         </li> 
       </ul>
     </nav>
 </template>
 
-
 <script>
 import useLogout from '../composables/useLogout'
 import getUser from '../composables/getUser'
 import verifyAndCheckAdmin from '@/composables/verifyAndCheckAdmin'
 import { ref, watch, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import useToken from '../composables/useToken'
 
 export default {
@@ -43,11 +42,13 @@ export default {
     const isAdmin = ref(false)
     const { token, getToken } = useToken()
     const route = useRoute()
-
+    const router = useRouter()
+    
     const handleLogout = async () => {
       await logout()
       if (!error.value) {
         console.log('User logged out')
+        router.push({ name: 'Movies'});
       }
     }
 
@@ -94,7 +95,7 @@ export default {
     <style>
     .user_details{
       color:#030637;
-      width: 100px;
+      width: auto;
       padding: 10px;
       border-radius: 5px;
       background: white;

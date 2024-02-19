@@ -60,7 +60,7 @@ export default {
     const search = ref('');
     const { token, getToken } = useToken();
     const {user} = getUser();
-    getToken()
+    getToken();
 
     const addFakerMoviesfunc = async () => {
       addFakerMovies();

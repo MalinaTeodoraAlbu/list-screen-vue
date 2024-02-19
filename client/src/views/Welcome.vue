@@ -81,4 +81,7 @@ export default {
   }
   }
 
+  .welcome > div {
+    max-width: 300px;
+  }
 </style>

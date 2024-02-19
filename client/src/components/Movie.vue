@@ -18,7 +18,6 @@
 </template>
 
 <script>
-import { projectAuth } from '@/firebase/config';
 
 export default {
   props: ['movie'],

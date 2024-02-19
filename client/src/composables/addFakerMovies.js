@@ -1,10 +1,10 @@
 import useToken from './useToken';
 
-const { token, getToken } = useToken();
-getToken();
-
 const addFakerMovies = async () => {
   try {
+    const { token, getToken } = useToken();
+    await getToken();
+
     const response = await fetch('http://localhost:4000/add-fake-movies', {
       method: 'POST',
       headers: {

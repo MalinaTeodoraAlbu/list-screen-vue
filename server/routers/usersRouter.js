@@ -3,6 +3,29 @@ const usersRouter = express.Router();
 
 const initializeUsersRouter = (firestore, checkAuthorization, admin) => {
 
+
+
+usersRouter.post('/users', checkAuthorization, async(req, res) => {
+  try {
+    const { userId, displayName } = req.body;
+    if (userId && displayName) {
+      const userRef = firestore.collection("users").doc(userId);
+      await userRef.set({
+        displayName: displayName,
+        movies: [],
+      });
+
+      const newUserDoc = await userRef.get();
+      const userData = newUserDoc.data();
+      res.status(201).json({ id: newUserDoc.id, ...userData });
+    } else {
+      res.status(400).json({ error: "Request body incomplete or missing" });
+    }
+  } catch (e) {
+    console.error("Error while inserting into the database:", e);
+    res.status(500).json({ error: "Internal server error occurred" });
+  }
+});
 //add for the user an movie
 usersRouter.post('/users/:userId/add-movie', checkAuthorization, async (req, res) => {
     try {

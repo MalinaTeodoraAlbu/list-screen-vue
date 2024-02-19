@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { projectAuth ,projectFirestore} from '../firebase/config';
+import { projectAuth} from '../firebase/config';
 
 const error = ref(null);
 
@@ -13,11 +13,21 @@ const signup = async (email, password, displayName) => {
     }
 
     await res.user.updateProfile({ displayName })
-    const userMoviesRef = projectFirestore.collection('users').doc(res.user.uid);
-    await userMoviesRef.set({
-      movies: [],
-    });
+    const token = await projectAuth.currentUser.getIdToken();
+    const newUser = {
+      userId: res.user.uid,
+      displayName: displayName,
+    };
 
+    const response = await fetch('http://localhost:4000/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(newUser),
+    });
+    console.log(response)
     error.value = null;
     return res
   }
