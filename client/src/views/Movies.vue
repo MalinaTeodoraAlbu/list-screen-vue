@@ -60,6 +60,7 @@ import { movies, fetchMovies } from '../composables/getMovies';
 import { computed, onMounted, ref } from 'vue';
 import { movies as tmdbMovies, fetchMoviesTMdb } from '@/composables/getMoviesTMDB'; 
 
+
 export default {
   components: { Navbar, MoviesList },
   setup() {
@@ -68,8 +69,8 @@ export default {
     const selectedGenre = ref('');
     const selectedRaiting = ref('');
 
-
     fetchMoviesTMdb()
+
     const search = ref('');
     const sortBy = ref('ranking');
     const sortOrder = ref(false);
