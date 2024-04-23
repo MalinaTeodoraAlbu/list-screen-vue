@@ -1,0 +1,19 @@
+import { projectAuth } from '../firebase/config'
+import { ref } from 'vue'
+
+const useToken = () => {
+    const error = ref(null)
+    const token = ref(null)
+
+    const getToken = async () => {
+      try{
+        token.value = await projectAuth.currentUser.getIdToken(true)
+      }catch(err){
+        console.log(err.message)
+        error.value = err.message
+      }
+    }
+    return { getToken, token, error }
+}
+
+export default useToken;
