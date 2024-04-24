@@ -19,7 +19,6 @@ const firestore = admin.firestore();
 //check 
 const checkAuthorization = async ( req, res, next) => {
   const idToken = req.headers.authorization?.split("Bearer ")[1];
-  console.log('Received ID token:', idToken);
   if (!idToken) {
     res.status(401).send("Unauthorized");
     return;

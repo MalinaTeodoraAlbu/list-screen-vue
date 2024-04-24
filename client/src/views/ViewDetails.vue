@@ -13,15 +13,11 @@
            <p class="attribute">Release date: </p>
            <span>{{ movie.ReleaseDate }}</span>
          </div>
-         <div class="movie-releaseDate">
-           <p class="attribute" >Duration: </p>
-           <span>{{ movie.Duration }}</span>
-         </div>
          <div class="movie-rating">
            <p class="attribute">Rating:</p>
            <div class="star-rating">
-             <span v-for="index in 10" :key="index" class="star" :class="{ 'filled': index <= Math.floor(movie.Rating), 'half-filled': index > Math.floor(movie.Rating) && index - 0.5 <= movie.Rating }">&#9733;</span>
-             <span>{{ movie.Rating }}</span>
+             <span v-for="index in 10" :key="index" class="fa fa-star" :class="{ 'filled': index <= Math.floor(movie.Rating), 'half-filled': index > Math.floor(movie.Rating) && index - 0.5 <= movie.Rating }"></span>
+             <span class="rating_span">{{ movie.Rating }}</span>
            </div>
          </div>
          <div class="movie-tags">
@@ -99,33 +95,18 @@
      }
  
      const fetchMovieData = async () => {
-       try {
-         const response = await fetch(`https://api.themoviedb.org/3/movie/${props.id}?api_key=be2cede8efce36dd7fd1931be5dfffdc`);
-         if (!response.ok) {
-             throw new Error(`Failed to fetch movie data: ${response.statusText}`);
-         }
- 
-         const creditsResponse = await fetch(`https://api.themoviedb.org/3/movie/${props.id}/credits?api_key=be2cede8efce36dd7fd1931be5dfffdc`);
-             const creditsData = await creditsResponse.json();
-             const cast = creditsData.cast.map(actor => actor.name);
- 
-         const data = await response.json();
-         const transformedMovie = {
-             id: data.id,
-             Cast: cast, 
-             Description: data.overview,
-             Rating: data.vote_average,
-             Title: data.title,
-             ImageURL: `https://image.tmdb.org/t/p/w500/${data.poster_path}`,
-             Duration: `${data.runtime}m`, 
-             Genre: data.genres.map(genre => genre.name), 
-             ReleaseDate: data.release_date
-         };
-         movie.value = transformedMovie;
-       } catch (error) {
-         console.error('Error fetching movie data:', error);
-       }
-     };
+      try {
+        const response = await fetch(`http://localhost:4000/movies/${props.id}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch movie data: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        movie.value = data.movie;
+      } catch (error) {
+        console.error('Error fetching movie data:', error);
+      }
+    };
  
      const watchedAdded = ref(false);
      const watchLaterAdded = ref(false);
@@ -162,6 +143,7 @@
        },
        async addToUserList(listType) {
          try {
+
            const response = await fetch(`http://localhost:4000/users/${user.value.uid}/add-movie`, {
              method: 'POST',
              headers: {
@@ -191,11 +173,21 @@
            const response = await fetch(`http://localhost:4000/users/${user.value.uid}`);
            const userData = await response.json();
            const movieId = props.id;
+           console.log(userData.user.movies)
            isUser.value = true;
- 
-           const isInCompletedMovies = userData.user.movies.some(movie => movie.id === movieId && movie.status === 'watched');
-           const isInWatchLaterMovies = userData.user.movies.some(movie => movie.id === movieId && movie.status === 'watchLater');
- 
+
+           
+           const isInCompletedMovies = userData.user.movies.some(movie => {
+                return movie.id.toString() === movieId && movie.status === 'watched';
+            });
+
+
+           const isInWatchLaterMovies = userData.user.movies.some(movie => 
+           {
+            return movie.id.toString() === movieId && movie.status === 'watchLater'
+          });
+          
+           console.log(isInCompletedMovies , " - ", isInWatchLaterMovies )
            watchedAdded.value = isInCompletedMovies;
            watchLaterAdded.value = isInWatchLaterMovies;
          } catch (error) {
@@ -214,7 +206,7 @@
              },
              body: JSON.stringify({
                listType: listType,
-               movieId: movieId,
+               movieId: movieId
              }),
            });
  
@@ -353,6 +345,9 @@
    color: #f39c12;
  }
  
+ .star-rating span{
+  margin-right: 5px;
+ }
  p{
    color: white;
    margin: 20px;
@@ -362,6 +357,11 @@
    display: flex;
    align-items: center;
    
+ }
+
+ .rating_span{
+  margin-left: 5px;
+  color: orange;
  }
  
  .tags span{

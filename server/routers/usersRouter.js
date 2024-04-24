@@ -26,6 +26,7 @@ usersRouter.post('/users', checkAuthorization, async(req, res) => {
     res.status(500).json({ error: "Internal server error occurred" });
   }
 });
+
 //add for the user an movie
 usersRouter.post('/users/:userId/add-movie', checkAuthorization, async (req, res) => {
     try {
@@ -73,13 +74,13 @@ usersRouter.put('/users/:userId/remove-movie', checkAuthorization, async (req, r
       }
   
       const userUpdate = {
-        movies: userDoc.data().movies.filter(movie => movie.id !== movieId)
+        movies: userDoc.data().movies.filter(movie => movie.id.toString() !== movieId)
       };
   
       console.log(`Movie removed from the user list for user ${userId}:`, movieId);
-  
+      
       await userRef.update(userUpdate);
-  
+      console.log(userUpdate)
       res.json({ message: 'Movie removed from the user list' });
     } catch (error) {
       console.error('Error removing movie from user list:', error);

@@ -78,7 +78,10 @@ moviesRouter.get('/movies', async (req, res) => {
       try {
           const moviesCollection = firestore.collection('Movies');
           const movieData = req.body;
-          await moviesCollection.doc(movieData.id.toString()).set(movieData);
+          const movieId = movieData.id.toString(); 
+
+          delete movieData.id;
+          await moviesCollection.doc(movieId).set(movieData);
           
           res.status(201).json({
               message: `The movie with ID ${movieData.id} is added to the database`,

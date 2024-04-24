@@ -27,10 +27,18 @@
             <option value="greater">Greater than 5</option>
           </select>
           </div>
+          <div class="dropdown">
+            <label>Release Year:</label>
+            <select v-model="selectedYear">
+              <option value="">All Years</option>
+              <option v-for="year in availableYears" :key="year" :value="year">{{ year }}</option>
+            </select>
+          </div>
           <div class="orderBy">
               <span class="material-symbols-outlined" v-if="sortOrder" @click="changeOrder">expand_less</span>
               <span class="material-symbols-outlined" v-else @click="changeOrder">keyboard_arrow_down</span>
           </div>
+       
           <div>
             <span class="material-symbols-outlined" @click="undoFilters">undo</span>
           </div>
@@ -68,10 +76,24 @@ export default {
     const genresArray = ref([]);
     const selectedGenre = ref('');
     const selectedRaiting = ref('');
+    const selectedYear = ref('');
+   
+    const availableYears = ref([]);
 
-    fetchMoviesTMdb()
+      const extractYears = () => {
+    const yearsSet = new Set();
+    movies.value.forEach((movie) => {
+      const releaseYear = movie.ReleaseDate ? movie.ReleaseDate.substring(0, 4) : null;
+      if (releaseYear) {
+        yearsSet.add(releaseYear);
+      }
+    });
+    availableYears.value = Array.from(yearsSet);
+  };
+
 
     const search = ref('');
+    const searchYear = ref('');
     const sortBy = ref('ranking');
     const sortOrder = ref(false);
     //page
@@ -112,7 +134,10 @@ export default {
     }
 
     onMounted(async () => {
+      await fetchMoviesTMdb()
       await fetchMovies();
+      extractYears();
+      
       if (movies.value) {
         movies.value.forEach((movie) => {
           movie.Genre.forEach((genre) => {
@@ -121,52 +146,53 @@ export default {
         });
       }
       genresArray.value = Array.from(genres);
+      
     });
 
-   
     
     const matchingMovies = computed(() => {
-      if (!movies.value || !Array.isArray(movies.value)) {
-        return [];
-      }
-
-      let filteredMovies = movies.value.filter((movie) => {
-        const titleMatch = movie.Title.toLowerCase().includes(search.value.toLowerCase());
-        const genreMatch = selectedGenre.value === '' || movie.Genre.includes(selectedGenre.value);
-
-        let raitingMatch = true;
-        if (selectedRaiting.value === 'lower' && movie.Rating > 5) {
-          raitingMatch = false;
-        } else if (selectedRaiting.value === 'greater' && movie.Rating <= 5) {
-          raitingMatch = false;
+        if (!movies.value || !Array.isArray(movies.value)) {
+          return [];
         }
-        return titleMatch && genreMatch && raitingMatch;
+
+        let filteredMovies = movies.value.filter((movie) => {
+          const titleMatch = movie.Title.toLowerCase().includes(search.value.toLowerCase());
+          const genreMatch = selectedGenre.value === '' || movie.Genre.includes(selectedGenre.value);
+          const yearMatch = selectedYear.value === '' || movie.ReleaseDate.substring(0, 4) === selectedYear.value;
+          let raitingMatch = true;
+          if (selectedRaiting.value === 'lower' && movie.Rating > 5) {
+            raitingMatch = false;
+          } else if (selectedRaiting.value === 'greater' && movie.Rating <= 5) {
+            raitingMatch = false;
+          }
+          return titleMatch && genreMatch && raitingMatch && yearMatch;
+        });
+
+        switch (sortBy.value) {
+          case 'ranking':
+            filteredMovies = filteredMovies.sort((a, b) => {
+              const order = sortOrder.value === true ? 1 : -1;
+              return order * (a.Rating - b.Rating);
+            });
+            break;
+          case 'alphabetical':
+            filteredMovies = filteredMovies.sort((a, b) => {
+              const order = sortOrder.value === true ? 1 : -1;
+              return order * a.Title.localeCompare(b.Title);
+            });
+            break;
+          default:
+            break;
+        }
+        return filteredMovies;
       });
 
-
-      switch (sortBy.value) {
-        case 'ranking':
-          filteredMovies = filteredMovies.sort((a, b) => {
-            const order = sortOrder.value === true ? 1 : -1;
-            return order * (a.Rating - b.Rating);
-          });
-          break;
-        case 'alphabetical':
-          filteredMovies = filteredMovies.sort((a, b) => {
-            const order = sortOrder.value === true ? 1 : -1;
-            return order * a.Title.localeCompare(b.Title);
-          });
-          break;
-        default:
-          break;
-      }
-      return filteredMovies;
-    });
 
     const undoFilters = () => {
     search.value = '';
     selectedGenre.value = '';
     selectedRaiting.value = '';
+    selectedYear.value='';
     sortBy.value = 'ranking';
     sortOrder.value = false;
     currentPage.value = 1;
@@ -174,6 +200,8 @@ export default {
 
     return {
       tmdbMovies,
+      selectedYear,
+      availableYears,
       movies,
       matchingMovies,
       search,
@@ -188,6 +216,7 @@ export default {
       nextPage,
       toggleFilters,
       isFiltersVisible,
+      searchYear,
       sortOrder,
       changeOrder,
       undoFilters
